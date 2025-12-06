@@ -1,68 +1,81 @@
-import { md4 } from './md4';
-import { md5 } from './md5';
-import { sha1 } from './sha1';
-import { sha256 } from './sha256';
+import { md4, md4_raw } from './md4';
+import { md5, md5_raw } from './md5';
+import { sha1, sha1_raw } from './sha1';
+import { sha256, sha256_raw } from './sha256';
+import { utf8Encode } from './utils';
 
-// si
 type HashFunction = (message: string) => string;
+type HashRawFunction = (binary: string) => string;
+
+function hexToBytes(hex: string): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < hex.length; i += 2) {
+    out.push(parseInt(hex.substr(i, 2), 16));
+  }
+  return out;
+}
+
+function bytesToRawString(bytes: number[]): string {
+  const CHUNK = 0x8000;
+  let out = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    const slice = bytes.slice(i, i + CHUNK);
+    out += String.fromCharCode.apply(null, slice as any);
+  }
+  return out;
+}
 
 export function hmac(
-  key: string, 
-  message: string, 
-  hashFunc: HashFunction = sha256, 
+  key: string,
+  message: string,
+  hash: HashFunction,
+  hashRaw: HashRawFunction,
   blockSize: number = 64
 ): string {
-  let keyBytes = key;
-  
-  if (key.length > blockSize) {
-    keyBytes = hexToBytes(hashFunc(key));
+  const keyUtf8 = utf8Encode(key);
+  const keyBytes: number[] = [];
+  for (let i = 0; i < keyUtf8.length; i++) keyBytes.push(keyUtf8.charCodeAt(i));
+
+  if (keyBytes.length > blockSize) {
+    const keyHashHex = hashRaw(keyUtf8);
+    const hashed = hexToBytes(keyHashHex);
+    keyBytes.length = 0;
+    hashed.forEach(b => keyBytes.push(b));
   }
-  
-  while (keyBytes.length < blockSize) {
-    keyBytes += '\x00';
+
+  if (keyBytes.length < blockSize) {
+    const diff = blockSize - keyBytes.length;
+    for (let i = 0; i < diff; i++) keyBytes.push(0);
   }
-  
-  const ipad = new Array(blockSize);
-  const opad = new Array(blockSize);
-  
+
+  const ipadBytes: number[] = new Array(blockSize);
+  const opadBytes: number[] = new Array(blockSize);
   for (let i = 0; i < blockSize; i++) {
-    const keyByte = i < keyBytes.length ? keyBytes.charCodeAt(i) : 0;
-    ipad[i] = keyByte ^ 0x36; // 54
-    opad[i] = keyByte ^ 0x5C; // 92
+    ipadBytes[i] = keyBytes[i] ^ 0x36;
+    opadBytes[i] = keyBytes[i] ^ 0x5c;
   }
-  
-  const ipadStr = String.fromCharCode.apply(null, ipad);
-  const opadStr = String.fromCharCode.apply(null, opad);
-  
-  const innerHash = hashFunc(ipadStr + message);
-  
-  const innerHashBytes = hexToBytes(innerHash);
-  const outerHash = hashFunc(opadStr + innerHashBytes);
-  
-  return outerHash;
+  const ipadRaw = bytesToRawString(ipadBytes);
+  const opadRaw = bytesToRawString(opadBytes);
+
+  const msgRaw = utf8Encode(message);
+
+  const innerHex = hashRaw(ipadRaw + msgRaw);
+
+  const innerBytes = hexToBytes(innerHex);
+  const innerRaw = bytesToRawString(innerBytes);
+
+  return hashRaw(opadRaw + innerRaw);
 }
 
-function hexToBytes(hex: string): string {
-  const bytes: string[] = [];
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes.push(String.fromCharCode(parseInt(hex.substring(i, 2), 16)));
-  }
-  return bytes.join('');
-}
-
-// Many uses for HMAC
 export function hmac_md4(key: string, message: string): string {
-  return hmac(key, message, md4, 64);
+  return hmac(key, message, md4, md4_raw, 64);
 }
-
 export function hmac_md5(key: string, message: string): string {
-  return hmac(key, message, md5, 64);
+  return hmac(key, message, md5, md5_raw, 64);
 }
-
 export function hmac_sha1(key: string, message: string): string {
-  return hmac(key, message, sha1, 64);
+  return hmac(key, message, sha1, sha1_raw, 64);
 }
-
-// export function hmac_sha256(key: string, message: string): string {
-//   return hmac(key, message, sha256, 64);
-// }
+export function hmac_sha256(key: string, message: string): string {
+  return hmac(key, message, sha256, sha256_raw, 64);
+}
