@@ -3,7 +3,7 @@
   import { md5 } from "$lib/crypto/md5";
   import { sha1 } from "$lib/crypto/sha1";
   import { sha256 } from "$lib/crypto/sha256";
-  import { hmac } from "$lib/crypto/hmac";
+  import { hmac, hmac_md4, hmac_md5, hmac_sha1, hmac_sha256 } from "$lib/crypto/hmac";
 
   let input = "";
   let algorithm = "MD5";
@@ -16,13 +16,13 @@
     if (hmacMode && hmacKey) {
       // Modo HMAC activado
       if (algorithm === "MD4") {
-        output = hmac(hmacKey, input, md4, 64);
+        output = hmac_md4(hmacKey, input, md4, 64);
       } else if (algorithm === "MD5") {
-        output = hmac(hmacKey, input, md5, 64);
+        output = hmac_md5(hmacKey, input, md5, 64);
       } else if (algorithm === "SHA1") {
-        output = hmac(hmacKey, input, sha1, 64);
+        output = hmac_sha1(hmacKey, input, sha1, 64);
       } else if (algorithm === "SHA256") {
-        output = hmac(hmacKey, input, sha256, 64);
+        output = hmac_sha256(hmacKey, input, sha256, 64);
       } else if (algorithm === "Base64") {
         output = "HMAC not available for Base64";
       }
