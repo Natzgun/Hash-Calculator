@@ -84,3 +84,7 @@ function strToBin(str: string): number[] {
   }
   return bin;
 }
+
+export function sha1_raw(binaryStr: string): string {
+  return binToHex(core_sha1(strToBin(binaryStr), binaryStr.length * 8));
+}

@@ -124,3 +124,8 @@ function md5_hh(a: number, b: number, c: number, d: number, x: number, s: number
 function md5_ii(a: number, b: number, c: number, d: number, x: number, s: number, t: number): number {
   return cmn(c ^ (b | (~d)), a, b, x, s, t);
 }
+
+export function md5_raw(binaryStr: string): string {
+  // binaryStr: cada carácter ya es un byte (0..255), no aplicar utf8Encode
+  return binToHex(core_md5(strToBin(binaryStr), binaryStr.length * 8));
+}
