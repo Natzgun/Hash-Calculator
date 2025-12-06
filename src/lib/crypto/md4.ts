@@ -106,3 +106,10 @@ function gg(a: number, b: number, c: number, d: number, x: number, s: number): n
 function hh(a: number, b: number, c: number, d: number, x: number, s: number): number {
   return rotl((a + (b ^ c ^ d) + x + 1859775393) | 0, s);
 }
+
+// Al final de md4.ts, añadir:
+export function md4_raw(binaryStr: string): string {
+  // binaryStr: cada carácter ya es un byte (0..255), no aplicar utf8Encode
+  return binToHex(core_md4(strToBin(binaryStr), binaryStr.length * 8));
+}
+
