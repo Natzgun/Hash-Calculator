@@ -2,6 +2,9 @@
   import { md4 } from "$lib/crypto/md4";
   import { md5 } from "$lib/crypto/md5";
   import { sha1 } from "$lib/crypto/sha1";
+  import { sha512 } from "$lib/crypto/sha512";
+  import { sha3_512 } from "$lib/crypto/sha3_512";
+  import { ripemd160 } from "$lib/crypto/ripemd160";
 
   let input = "";
   let algorithm = "MD5";
@@ -15,6 +18,12 @@
       output = md5(input);
     } else if (algorithm === "SHA1") {
       output = sha1(input);
+    } else if (algorithm === "SHA512") {
+      output = sha512(input);
+    } else if (algorithm === "SHA3-512") {
+      output = sha3_512(input);
+    } else if (algorithm === "RIPEMD160") {
+      output = ripemd160(input);
     } else if (algorithm === "Base64") {
       try {
         output = btoa(input);
@@ -54,6 +63,9 @@
         <option value="MD4">MD4</option>
         <option value="MD5">MD5</option>
         <option value="SHA1">SHA-1</option>
+        <option value="SHA512">SHA2-512</option>
+        <option value="SHA3-512">SHA3-512</option>
+        <option value="RIPEMD160">RIPEMD-160</option>
         <option value="Base64">Base64</option>
       </select>
     </div>
